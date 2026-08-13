@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biology 101 — Interactive Study Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1F1C;
+    --panel:#122A25;
+    --panel-2:#173630;
+    --line:rgba(237,237,228,0.12);
+    --paper:#EDEDE4;
+    --paper-dim:rgba(237,237,228,0.62);
+    --teal:#54D6C9;
+    --teal-dim:rgba(84,214,201,0.16);
+    --coral:#FF7A5C;
+    --coral-dim:rgba(255,122,92,0.16);
+    --gold:#E8C46A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 600px at 85% -10%, rgba(84,214,201,0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%, rgba(255,122,92,0.07), transparent 55%),
+      var(--ink);
+    color:var(--paper);
+    font-family:'Source Sans 3', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--teal);
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    margin:0;
+    line-height:1.1;
+  }
+  a{color:inherit;}
+
+  /* ---------- Header ---------- */
+  header{
+    padding:56px 24px 32px;
+    max-width:980px;
+    margin:0 auto;
+    text-align:center;
+  }
+  header .eyebrow{display:block;margin-bottom:14px;}
+  header h1{font-size:clamp(32px,5vw,52px);}
+  header p{
+    max-width:560px;
+    margin:16px auto 0;
+    color:var(--paper-dim);
+    font-size:16px;
+  }
+  .membrane{
+    width:100%;
+    max-width:640px;
+    height:64px;
+    margin:32px auto 0;
+    display:block;
+  }
+
+  /* ---------- Nav ---------- */
+  .tabbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(11,31,28,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .tabbar-inner{
+    max-width:980px;
+    margin:0 auto;
+    display:flex;
+    gap:4px;
+    padding:10px 20px;
+    overflow-x:auto;
+  }
+  .tab-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    background:transparent;
+    border:1px solid transparent;
+    color:var(--paper-dim);
+    padding:9px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all .15s ease;
+  }
+  .tab-btn:hover{color:var(--paper);border-color:var(--line);}
+  .tab-btn.active{
+    background:var(--teal-dim);
+    color:var(--teal);
+    border-color:rgba(84,214,201,0.35);
+  }
+
+  main{max-width:980px;margin:0 auto;padding:40px 24px 100px;}
+  section.view{display:none;}
+  section.view.active{display:block;animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- Learn view ---------- */
+  .unit{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--panel);
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .unit-head{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:20px 22px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .unit-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--ink);
+    background:var(--teal);
+    width:30px;height:30px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    font-weight:600;
+  }
+  .unit-head h3{font-size:19px;color:var(--paper);flex:1;}
+  .unit-head .sub{font-size:13px;color:var(--paper-dim);display:none;}
+  .chev{transition:transform .25s ease;color:var(--paper-dim);flex-shrink:0;}
+  .unit.open .chev{transform:rotate(180deg);}
+  .unit-body{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .35s ease;
+    padding:0 22px;
+  }
+  .unit.open .unit-body{padding-bottom:22px;}
+  .unit-body p.lead{color:var(--paper-dim);font-size:14.5px;margin:0 0 16px;}
+  .topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
+  .topic-card{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .topic-card h4{
+    font-family:'Source Sans 3',sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    margin:0 0 6px;
+    color:var(--teal);
+  }
+  .topic-card p{margin:0;font-size:13.5px;color:var(--paper-dim);line-height:1.5;}
+  .topic-card ul{margin:6px 0 0;padding-left:16px;font-size:13.5px;color:var(--paper-dim);line-height:1.6;}
+
+  /* ---------- Flashcards view ---------- */
+  .fc-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px;}
+  .fc-count{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+  .fc-filters{display:flex;gap:8px;flex-wrap:wrap;}
+  .chip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--paper-dim);
+    cursor:pointer;
+  }
+  .chip.active{background:var(--coral-dim);color:var(--coral);border-color:rgba(255,122,92,0.4);}
+
+  .fc-stage{display:flex;flex-direction:column;align-items:center;gap:20px;}
+  .flashcard{
+    width:100%;
+    max-width:480px;
+    height:280px;
+    perspective:1400px;
+    cursor:pointer;
+  }
+  .flashcard-inner{
+    position:relative;width:100%;height:100%;
+    transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .flashcard.flipped .flashcard-inner{transform:rotateY(180deg);}
+  .fc-face{
+    position:absolute;inset:0;
+    backface-visibility:hidden;
+    border-radius:18px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:32px;
+    border:1px solid var(--line);
+  }
+  .fc-front{
+    background:linear-gradient(155deg,var(--panel-2),var(--panel));
+  }
+  .fc-front .tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;}
+  .fc-front h3{font-size:26px;color:var(--paper);}
+  .fc-hint{position:absolute;bottom:16px;font-size:11.5px;color:var(--paper-dim);font-family:'IBM Plex Mono',monospace;}
+  .fc-back{
+    background:linear-gradient(155deg,#1d4a40,#123028);
+    transform:rotateY(180deg);
+  }
+  .fc-back p{font-size:16px;line-height:1.55;color:var(--paper);}
+  .fc-nav{display:flex;align-items:center;gap:18px;}
+  .fc-nav button{
+    width:44px;height:44px;border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--paper);
+    cursor:pointer;
+    font-size:18px;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s;
+  }
+  .fc-nav button:hover{background:var(--panel-2);}
+  .fc-progress{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);min-width:70px;text-align:center;}
+  .fc-shuffle{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);
+    background:none;border:none;text-decoration:underline;cursor:pointer;
+  }
+
+  /* ---------- Quiz view ---------- */
+  .quiz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px;}
+  .quiz-progress-bar{width:100%;height:6px;background:var(--panel-2);border-radius:99px;overflow:hidden;margin-bottom:28px;}
+  .quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--gold));width:0%;transition:width .3s ease;}
+  .qcount{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+  .qscore{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal);}
+  .question-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px 26px;
+  }
+  .question-card h3{font-size:20px;color:var(--paper);margin-bottom:20px;line-height:1.4;}
+  .opt{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--paper);
+    padding:14px 16px;
+    border-radius:10px;
+    margin-bottom:10px;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:all .15s ease;
+    font-family:'Source Sans 3',sans-serif;
+  }
+  .opt:hover{border-color:rgba(84,214,201,0.4);}
+  .opt.correct{background:rgba(84,214,201,0.18);border-color:var(--teal);color:var(--teal);}
+  .opt.wrong{background:rgba(255,122,92,0.16);border-color:var(--coral);color:var(--coral);}
+  .opt[disabled]{cursor:default;}
+  .qfoot{display:flex;justify-content:space-between;align-items:center;margin-top:18px;}
+  .explain{font-size:13px;color:var(--paper-dim);margin-top:4px;min-height:18px;}
+  .btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:.03em;
+    background:var(--teal);
+    color:var(--ink);
+    border:none;
+    padding:11px 20px;
+    border-radius:999px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--paper);}
+
+  .quiz-result{text-align:center;padding:40px 20px;}
+  .quiz-result .big{font-family:'Fraunces',serif;font-size:56px;color:var(--teal);}
+  .quiz-result p{color:var(--paper-dim);margin:10px 0 26px;}
+  .result-msg{font-size:16px;color:var(--paper);margin-bottom:4px;}
+
+  @media(max-width:600px){
+    .flashcard{height:240px;}
+    .fc-front h3{font-size:21px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="eyebrow">Biology 101 · Week 1</span>
+  <h1>Introduction to Basic Biology</h1>
+  <p>Cell structure, biomolecules, cellular organization, and biological processes — study the lessons, drill the terms, then test yourself.</p>
+  <svg class="membrane" viewBox="0 0 640 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#54D6C9" stroke-width="1.4" opacity="0.55">
+      <path d="M0 20 Q 10 4, 20 20 T 40 20" fill="none"/>
+      <path d="M40 20 Q 50 4, 60 20 T 80 20" fill="none"/>
+      <path d="M80 20 Q 90 4, 100 20 T 120 20" fill="none"/>
+      <path d="M120 20 Q 130 4, 140 20 T 160 20" fill="none"/>
+      <path d="M160 20 Q 170 4, 180 20 T 200 20" fill="none"/>
+      <path d="M200 20 Q 210 4, 220 20 T 240 20" fill="none"/>
+      <path d="M240 20 Q 250 4, 260 20 T 280 20" fill="none"/>
+      <path d="M280 20 Q 290 4, 300 20 T 320 20" fill="none"/>
+      <path d="M320 20 Q 330 4, 340 20 T 360 20" fill="none"/>
+      <path d="M360 20 Q 370 4, 380 20 T 400 20" fill="none"/>
+      <path d="M400 20 Q 410 4, 420 20 T 440 20" fill="none"/>
+      <path d="M440 20 Q 450 4, 460 20 T 480 20" fill="none"/>
+      <path d="M480 20 Q 490 4, 500 20 T 520 20" fill="none"/>
+      <path d="M520 20 Q 530 4, 540 20 T 560 20" fill="none"/>
+      <path d="M560 20 Q 570 4, 580 20 T 600 20" fill="none"/>
+      <path d="M600 20 Q 610 4, 620 20 T 640 20" fill="none"/>
+    </g>
+    <g stroke="#FF7A5C" stroke-width="1.4" opacity="0.45">
+      <path d="M0 44 Q 10 60, 20 44 T 40 44" fill="none"/>
+      <path d="M40 44 Q 50 60, 60 44 T 80 44" fill="none"/>
+      <path d="M80 44 Q 90 60, 100 44 T 120 44" fill="none"/>
+      <path d="M120 44 Q 130 60, 140 44 T 160 44" fill="none"/>
+      <path d="M160 44 Q 170 60, 180 44 T 200 44" fill="none"/>
+      <path d="M200 44 Q 210 60, 220 44 T 240 44" fill="none"/>
+      <path d="M240 44 Q 250 60, 260 44 T 280 44" fill="none"/>
+      <path d="M280 44 Q 290 60, 300 44 T 320 44" fill="none"/>
+      <path d="M320 44 Q 330 60, 340 44 T 360 44" fill="none"/>
+      <path d="M360 44 Q 370 60, 380 44 T 400 44" fill="none"/>
+      <path d="M400 44 Q 410 60, 420 44 T 440 44" fill="none"/>
+      <path d="M440 44 Q 450 60, 460 44 T 480 44" fill="none"/>
+      <path d="M480 44 Q 490 60, 500 44 T 520 44" fill="none"/>
+      <path d="M520 44 Q 530 60, 540 44 T 560 44" fill="none"/>
+      <path d="M560 44 Q 570 60, 580 44 T 600 44" fill="none"/>
+      <path d="M600 44 Q 610 60, 620 44 T 640 44" fill="none"/>
+    </g>
+  </svg>
+</header>
+
+<div class="tabbar">
+  <div class="tabbar-inner">
+    <button class="tab-btn active" data-view="learn">01 · Learn</button>
+    <button class="tab-btn" data-view="flashcards">02 · Flashcards</button>
+    <button class="tab-btn" data-view="quiz">03 · Quiz</button>
+  </div>
+</div>
+
+<main>
+
+  <!-- ================= LEARN ================= -->
+  <section class="view active" id="view-learn"></section>
+
+  <!-- ================= FLASHCARDS ================= -->
+  <section class="view" id="view-flashcards">
+    <div class="fc-toolbar">
+      <div class="fc-count" id="fc-count">24 terms</div>
+      <div class="fc-filters" id="fc-filters"></div>
+    </div>
+    <div class="fc-stage">
+      <div class="flashcard" id="flashcard">
+        <div class="flashcard-inner">
+          <div class="fc-face fc-front">
+            <div class="tag" id="fc-tag">Foundations of Life</div>
+            <h3 id="fc-term">Term</h3>
+            <div class="fc-hint">tap card to flip</div>
+          </div>
+          <div class="fc-face fc-back">
+            <p id="fc-def">Definition</p>
+          </div>
+        </div>
+      </div>
+      <div class="fc-nav">
+        <button id="fc-prev" aria-label="Previous">&larr;</button>
+        <div class="fc-progress" id="fc-progress">1 / 24</div>
+        <button id="fc-next" aria-label="Next">&rarr;</button>
+      </div>
+      <button class="fc-shuffle" id="fc-shuffle">shuffle deck</button>
+    </div>
+  </section>
+
+  <!-- ================= QUIZ ================= -->
+  <section class="view" id="view-quiz">
+    <div id="quiz-active">
+      <div class="quiz-head">
+        <div class="qcount" id="q-count">Question 1 / 15</div>
+        <div class="qscore" id="q-score">Score: 0</div>
+      </div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="q-progress-fill"></div></div>
+      <div class="question-card">
+        <h3 id="q-text">Question text</h3>
+        <div id="q-options"></div>
+        <div class="explain" id="q-explain"></div>
+        <div class="qfoot">
+          <span></span>
+          <button class="btn" id="q-next" disabled>Next question</button>
+        </div>
+      </div>
+    </div>
+    <div id="quiz-result" style="display:none;" class="quiz-result">
+      <div class="eyebrow" style="margin-bottom:10px;">Results</div>
+      <div class="big" id="result-score">0/15</div>
+      <p class="result-msg" id="result-msg"></p>
+      <button class="btn" id="q-retake">Retake quiz</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ============================================================
+   DATA — pulled from Biology 101, Introduction to Basic Biology
+   ============================================================ */
+const units = [
+  {
+    n:"01", title:"Foundations of Life",
+    lead:"What biology studies, and the traits every living thing shares.",
+    topics:[
+      {h:"What is biology?", p:"The scientific study of living organisms — structure, function, growth, origin, and interactions — spanning scales from single molecules to entire ecosystems."},
+      {h:"Diversity & unity", p:"Millions of species exist, from single-celled bacteria to complex multicellular organisms — yet all life shares the same basic chemistry and cellular organization."},
+      {h:"6 characteristics of living things", list:["Cellular organization — made of one or more cells","Metabolism — convert energy and matter to grow","Homeostasis — maintain a stable internal environment","Growth & development — increase in size and complexity","Reproduction — produce offspring, pass on genes","Response to stimuli — detect and react to change"]},
+      {h:"Levels of biological organization", list:["Atom / Molecule","Organelle","Cell","Tissue","Organ / Organ system","Organism"]}
+    ]
+  },
+  {
+    n:"02", title:"Biomolecules",
+    lead:"The four classes of molecules that build and power every cell.",
+    topics:[
+      {h:"Carbohydrates", p:"Built from sugar (monosaccharide) units like glucose. Primary energy source; short-term storage as glycogen or starch; structural role in cellulose."},
+      {h:"Lipids", p:"Nonpolar, hydrophobic hydrocarbon chains. Triglycerides store energy long-term; phospholipids form every cell membrane; steroids like cholesterol regulate membrane fluidity."},
+      {h:"Proteins", p:"Chains of 20 possible amino acids joined by peptide bonds, folded into primary, secondary, tertiary, and quaternary structure. Function as enzymes, transporters, structural material, and signals."},
+      {h:"Nucleic acids", p:"DNA (double-stranded, deoxyribose, A–T/G–C pairing) stores genetic instructions; RNA (usually single-stranded, ribose, uses uracil) carries and expresses them."},
+      {h:"Water — the solvent of life", p:"Its bent shape makes water polar, so it forms hydrogen bonds. It makes up 60–70% of most cells and is the medium for nearly all biochemical reactions."},
+      {h:"ATP", p:"A nucleotide with three phosphate groups — the cell's main energy currency. Breaking the terminal phosphate bond (ATP → ADP) releases usable energy."}
+    ]
+  },
+  {
+    n:"03", title:"Cell Structure",
+    lead:"The organelles and compartments that make up prokaryotic and eukaryotic cells.",
+    topics:[
+      {h:"Cell theory", list:["All living organisms are made of one or more cells","The cell is the basic structural and functional unit of life","All cells arise from pre-existing cells through division"]},
+      {h:"Prokaryotic vs eukaryotic", p:"Prokaryotic cells (bacteria, archaea) have no nucleus and few organelles. Eukaryotic cells (animals, plants, fungi, protists) have a true membrane-bound nucleus and many membrane-bound organelles."},
+      {h:"Plasma membrane", p:"A selectively permeable phospholipid bilayer — hydrophilic heads out, hydrophobic tails in — studded with proteins that regulate what enters and exits."},
+      {h:"Nucleus", p:"Enclosed by a double nuclear envelope with pores; houses DNA and the nucleolus; the cell's control center for replication and transcription."},
+      {h:"ER, Golgi, mitochondria, ribosomes", list:["Rough ER folds proteins; smooth ER builds lipids","Golgi apparatus sorts and packages products for shipping","Mitochondria generate ATP and have their own DNA","Ribosomes synthesize proteins, free or bound to rough ER"]},
+      {h:"Lysosomes, peroxisomes, cytoskeleton", list:["Lysosomes digest waste and recycle components","Peroxisomes break down fatty acids and detoxify","Microfilaments, intermediate filaments, and microtubules give shape, strength, and transport"]},
+      {h:"Plant-specific structures", p:"Cell wall (rigid cellulose support), chloroplast (site of photosynthesis), and a large central vacuole (stores water and nutrients) — all absent in animal cells."}
+    ]
+  },
+  {
+    n:"04", title:"Cellular Organization",
+    lead:"How cells are internally organized, and how they build tissues, organs, and organisms.",
+    topics:[
+      {h:"Why compartments?", p:"Eukaryotic cells divide labor among membrane-bound organelles, each maintaining its own internal environment — increasing efficiency, protecting the cell, and allowing specialization."},
+      {h:"From cells to organisms", list:["Cell — the basic living unit","Tissue — similar cells sharing a function","Organ — multiple tissue types working together","Organ system — organs cooperating for a broader function","Organism — a complete individual"]},
+      {h:"Unicellular vs multicellular", p:"Unicellular organisms perform every life function in one cell — simple and fast-reproducing. Multicellular organisms use many specialized, differentiated cells for greater size and complexity."}
+    ]
+  },
+  {
+    n:"05", title:"Biological Processes",
+    lead:"Metabolism, replication, gene expression, signaling, and how cells stay alive.",
+    topics:[
+      {h:"Enzymes & catalysis", p:"Biological catalysts — usually proteins — with an active site shaped for a specific substrate. They lower activation energy and are regulated by temperature, pH, and inhibitors."},
+      {h:"Cellular respiration", list:["Glycolysis — glucose splits in the cytoplasm","Pyruvate oxidation — pyruvate enters the mitochondria","Citric acid cycle — extracts high-energy electrons","Electron transport chain — drives large-scale ATP production"]},
+      {h:"Photosynthesis", p:"Light reactions in the thylakoid membrane capture light energy to make ATP and NADPH; the Calvin cycle uses that energy to build glucose from CO2 — complementary to respiration."},
+      {h:"DNA replication", list:["Unwinding — helicase separates the strands","Priming — primase lays down RNA primers","Synthesis — DNA polymerase adds nucleotides","Proofreading & sealing — errors fixed, fragments joined by ligase"]},
+      {h:"Gene expression", list:["Transcription — DNA copied into mRNA","RNA processing — mRNA edited for export","Translation — ribosomes assemble a protein from mRNA"]},
+      {h:"Signaling, homeostasis & division", p:"Cells send and receive chemical signals to coordinate behavior and maintain homeostasis through feedback loops. Cell division proceeds through interphase, mitosis, and cytokinesis."}
+    ]
+  }
+];
+
+const flashcards = [
+  {cat:"Foundations", term:"Biology", def:"The scientific study of living organisms — their structure, function, growth, origin, and interactions."},
+  {cat:"Foundations", term:"Homeostasis", def:"Maintaining a stable internal environment despite changes in the external world."},
+  {cat:"Foundations", term:"Metabolism", def:"The set of processes that convert energy and matter so an organism can grow and maintain itself."},
+  {cat:"Foundations", term:"Levels of Organization", def:"Atom/molecule → organelle → cell → tissue → organ/organ system → organism."},
+  {cat:"Biomolecules", term:"Carbohydrates", def:"Sugars and starches built from monosaccharide units — the primary, readily available energy source."},
+  {cat:"Biomolecules", term:"Lipids", def:"Nonpolar, hydrophobic molecules including triglycerides (energy storage) and phospholipids (membranes)."},
+  {cat:"Biomolecules", term:"Proteins", def:"Chains of amino acids joined by peptide bonds; function as enzymes, structure, transport, and signals."},
+  {cat:"Biomolecules", term:"Nucleic Acids", def:"DNA and RNA — the molecules that store and transmit genetic information."},
+  {cat:"Biomolecules", term:"Polarity of Water", def:"Water's bent shape and unequal charge distribution make it a polar molecule, enabling hydrogen bonding."},
+  {cat:"Biomolecules", term:"Phospholipid", def:"A lipid with a polar phosphate head and two nonpolar tails — the core building block of cell membranes."},
+  {cat:"Biomolecules", term:"Amino Acid", def:"The building block of proteins: a central carbon with an amino group, a carboxyl group, and a side chain."},
+  {cat:"Biomolecules", term:"ATP", def:"Adenosine triphosphate — the cell's main energy currency, built from a nucleotide with three phosphates."},
+  {cat:"Cell Structure", term:"Cell Theory", def:"All living things are made of cells; the cell is life's basic unit; all cells come from pre-existing cells."},
+  {cat:"Cell Structure", term:"Prokaryotic Cell", def:"A cell with no membrane-bound nucleus — DNA is free in the cytoplasm (bacteria, archaea)."},
+  {cat:"Cell Structure", term:"Eukaryotic Cell", def:"A cell with a true, membrane-bound nucleus and many membrane-bound organelles."},
+  {cat:"Cell Structure", term:"Plasma Membrane", def:"A selectively permeable phospholipid bilayer that encloses the cell and controls what enters and exits."},
+  {cat:"Cell Structure", term:"Nucleus", def:"Houses the cell's DNA; site of DNA replication and RNA transcription; the cell's control center."},
+  {cat:"Cell Structure", term:"Mitochondria", def:"The cell's main energy generators — they produce ATP and carry their own DNA."},
+  {cat:"Cell Structure", term:"Ribosomes", def:"Molecular machines, made of RNA and protein, that synthesize proteins."},
+  {cat:"Cell Structure", term:"Lysosomes", def:"Membrane-bound sacs of digestive enzymes that break down waste and recycle cellular components."},
+  {cat:"Cell Structure", term:"Chloroplast", def:"The plant-cell organelle where photosynthesis converts light energy into sugars."},
+  {cat:"Cellular Organization", term:"Tissue", def:"A group of similar cells working together to perform a shared function."},
+  {cat:"Biological Processes", term:"Enzyme", def:"A biological catalyst, usually a protein, that speeds up a specific reaction without being consumed."},
+  {cat:"Biological Processes", term:"Cellular Respiration", def:"The process that converts glucose and oxygen into usable ATP energy."}
+];
+
+const quizBank = [
+  {q:"What does biology study?", opts:["Only human anatomy","Living organisms — their structure, function, growth, and interactions","Only chemical reactions","The physics of motion"], a:1, ex:"Biology spans every level of life, from molecules to ecosystems."},
+  {q:"Which characteristic of life means maintaining a stable internal environment?", opts:["Metabolism","Reproduction","Homeostasis","Growth & development"], a:2, ex:"Homeostasis keeps conditions like temperature and pH steady despite outside change."},
+  {q:"Which biomolecule class stores and transmits genetic information?", opts:["Carbohydrates","Lipids","Proteins","Nucleic acids"], a:3, ex:"DNA and RNA are the nucleic acids that store genetic instructions."},
+  {q:"What makes water a polar molecule?", opts:["Its bent shape and unequal charge distribution","Its large size","Its lack of hydrogen atoms","Its ability to freeze"], a:0, ex:"Water's bent geometry gives it a positive and negative end, making it polar."},
+  {q:"Simple sugar units (monosaccharides) link together to form:", opts:["Amino acids","Disaccharides and polysaccharides","Nucleotides","Phospholipids"], a:1, ex:"Monosaccharides like glucose link into larger carbohydrates such as starch and glycogen."},
+  {q:"Phospholipids are the key structural component of the:", opts:["Nucleus","Ribosome","Cell membrane","Cytoskeleton"], a:2, ex:"Phospholipids arrange into a bilayer — hydrophilic heads out, hydrophobic tails in."},
+  {q:"Proteins are built from chains of:", opts:["Nucleotides","Amino acids","Fatty acids","Monosaccharides"], a:1, ex:"20 different amino acids join by peptide bonds to build proteins."},
+  {q:"Which base pairs with adenine in DNA?", opts:["Cytosine","Guanine","Uracil","Thymine"], a:3, ex:"DNA base pairing is A–T and G–C."},
+  {q:"Which base appears in RNA instead of thymine?", opts:["Uracil","Guanine","Cytosine","Adenine"], a:0, ex:"RNA uses uracil in place of DNA's thymine."},
+  {q:"ATP stands for:", opts:["Amino Transfer Protein","Adenosine Triphosphate","Active Transport Pathway","Adenine Triple Polymer"], a:1, ex:"ATP, adenosine triphosphate, is the cell's main energy currency."},
+  {q:"According to cell theory, all cells arise from:", opts:["Spontaneous generation","Nucleic acid assembly","Pre-existing cells through division","Random chemical reactions"], a:2, ex:"Cell theory states new cells only come from division of existing cells."},
+  {q:"Which cell type lacks a membrane-bound nucleus?", opts:["Eukaryotic","Prokaryotic","Plant","Fungal"], a:1, ex:"Prokaryotic cells, like bacteria, keep their DNA free in the cytoplasm."},
+  {q:"The main job of the plasma membrane is to:", opts:["Store genetic material","Generate ATP","Selectively control what enters and exits the cell","Synthesize proteins"], a:2, ex:"The plasma membrane is a selectively permeable phospholipid bilayer."},
+  {q:"Which organelle is the cell's main ATP producer?", opts:["Ribosome","Mitochondria","Lysosome","Golgi apparatus"], a:1, ex:"Mitochondria generate most of a cell's ATP and carry their own DNA."},
+  {q:"Which organelle synthesizes proteins?", opts:["Ribosome","Peroxisome","Nucleus","Vacuole"], a:0, ex:"Ribosomes, made of RNA and protein, assemble amino acids into proteins."},
+  {q:"Which structure is found in plant cells but not animal cells?", opts:["Mitochondria","Ribosomes","Cell wall","Plasma membrane"], a:2, ex:"Plant cells have a rigid cellulose cell wall for support and protection."},
+  {q:"Correct order of biological organization, simplest to most complex:", opts:["Cell → Organelle → Tissue → Atom → Organ","Atom → Organelle → Cell → Tissue → Organ → Organism","Organism → Organ → Tissue → Cell","Tissue → Cell → Organelle → Atom"], a:1, ex:"Organization builds from atoms and molecules up to whole organisms."},
+  {q:"Which is the correct order of gene expression?", opts:["Translation → Transcription → RNA processing","Transcription → RNA processing → Translation","RNA processing → Translation → Transcription","Translation → RNA processing → Transcription"], a:1, ex:"DNA is transcribed into mRNA, the mRNA is processed, then translated into protein."},
+  {q:"Photosynthesis mainly takes place in the:", opts:["Mitochondria","Nucleus","Chloroplast","Lysosome"], a:2, ex:"Chloroplasts house both the light reactions and the Calvin cycle."},
+  {q:"Cellular respiration converts glucose and oxygen into:", opts:["DNA","Usable ATP energy","Chlorophyll","Cellulose"], a:1, ex:"Respiration runs through glycolysis, pyruvate oxidation, the citric acid cycle, and the electron transport chain to produce ATP."}
+];
+
+/* ============================================================
+   LEARN VIEW — render accordion
+   ============================================================ */
+const learnEl = document.getElementById('view-learn');
+units.forEach((u, i) => {
+  const unit = document.createElement('div');
+  unit.className = 'unit' + (i===0 ? ' open' : '');
+  const topicsHtml = u.topics.map(t => {
+    const body = t.p ? `<p>${t.p}</p>` : `<ul>${t.list.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+    return `<div class="topic-card"><h4>${t.h}</h4>${body}</div>`;
+  }).join('');
+  unit.innerHTML = `
+    <div class="unit-head">
+      <div class="unit-num">${u.n}</div>
+      <h3>${u.title}</h3>
+      <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="unit-body">
+      <p class="lead">${u.lead}</p>
+      <div class="topic-grid">${topicsHtml}</div>
+    </div>
+  `;
+  unit.querySelector('.unit-head').addEventListener('click', () => {
+    const body = unit.querySelector('.unit-body');
+    unit.classList.toggle('open');
+    body.style.maxHeight = unit.classList.contains('open') ? body.scrollHeight + 'px' : '0';
+  });
+  learnEl.appendChild(unit);
+});
+// set initial max-height for open unit
+requestAnimationFrame(() => {
+  const openUnit = document.querySelector('.unit.open .unit-body');
+  if (openUnit) openUnit.style.maxHeight = openUnit.scrollHeight + 'px';
+});
+
+/* ============================================================
+   TAB NAVIGATION
+   ============================================================ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  });
+});
+
+/* ============================================================
+   FLASHCARDS
+   ============================================================ */
+let fcDeck = [...flashcards];
+let fcIndex = 0;
+let activeCat = 'All';
+
+const categories = ['All', ...new Set(flashcards.map(f => f.cat))];
+const filterEl = document.getElementById('fc-filters');
+categories.forEach(cat => {
+  const chip = document.createElement('button');
+  chip.className = 'chip' + (cat === 'All' ? ' active' : '');
+  chip.textContent = cat;
+  chip.addEventListener('click', () => {
+    activeCat = cat;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    fcDeck = cat === 'All' ? [...flashcards] : flashcards.filter(f => f.cat === cat);
+    fcIndex = 0;
+    document.getElementById('fc-count').textContent = fcDeck.length + ' terms';
+    renderCard();
+  });
+  filterEl.appendChild(chip);
+});
+
+const cardEl = document.getElementById('flashcard');
+function renderCard(){
+  cardEl.classList.remove('flipped');
+  const card = fcDeck[fcIndex];
+  document.getElementById('fc-tag').textContent = card.cat;
+  document.getElementById('fc-term').textContent = card.term;
+  document.getElementById('fc-def').textContent = card.def;
+  document.getElementById('fc-progress').textContent = (fcIndex+1) + ' / ' + fcDeck.length;
+}
+cardEl.addEventListener('click', () => cardEl.classList.toggle('flipped'));
+document.getElementById('fc-next').addEventListener('click', () => {
+  fcIndex = (fcIndex + 1) % fcDeck.length;
+  renderCard();
+});
+document.getElementById('fc-prev').addEventListener('click', () => {
+  fcIndex = (fcIndex - 1 + fcDeck.length) % fcDeck.length;
+  renderCard();
+});
+document.getElementById('fc-shuffle').addEventListener('click', () => {
+  for (let i = fcDeck.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [fcDeck[i], fcDeck[j]] = [fcDeck[j], fcDeck[i]];
+  }
+  fcIndex = 0;
+  renderCard();
+});
+document.getElementById('fc-count').textContent = fcDeck.length + ' terms';
+renderCard();
+
+/* ============================================================
+   QUIZ
+   ============================================================ */
+let quizQuestions = [];
+let qIndex = 0;
+let score = 0;
+let answered = false;
+
+function shuffledQuiz(){
+  const arr = [...quizBank];
+  for (let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startQuiz(){
+  quizQuestions = shuffledQuiz();
+  qIndex = 0;
+  score = 0;
+  answered = false;
+  document.getElementById('quiz-active').style.display = 'block';
+  document.getElementById('quiz-result').style.display = 'none';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered = false;
+  const item = quizQuestions[qIndex];
+  document.getElementById('q-count').textContent = `Question ${qIndex+1} / ${quizQuestions.length}`;
+  document.getElementById('q-score').textContent = `Score: ${score}`;
+  document.getElementById('q-progress-fill').style.width = (qIndex / quizQuestions.length * 100) + '%';
+  document.getElementById('q-text').textContent = item.q;
+  document.getElementById('q-explain').textContent = '';
+  document.getElementById('q-next').disabled = true;
+  document.getElementById('q-next').textContent = (qIndex === quizQuestions.length - 1) ? 'See results' : 'Next question';
+
+  const optsEl = document.getElementById('q-options');
+  optsEl.innerHTML = '';
+  item.opts.forEach((opt, idx) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.addEventListener('click', () => selectOption(idx));
+    optsEl.appendChild(b);
+  });
+}
+
+function selectOption(idx){
+  if (answered) return;
+  answered = true;
+  const item = quizQuestions[qIndex];
+  const buttons = document.querySelectorAll('#q-options .opt');
+  buttons.forEach((b, i) => {
+    b.disabled = true;
+    if (i === item.a) b.classList.add('correct');
+    else if (i === idx) b.classList.add('wrong');
+  });
+  if (idx === item.a) score++;
+  document.getElementById('q-score').textContent = `Score: ${score}`;
+  document.getElementById('q-explain').textContent = item.ex;
+  document.getElementById('q-next').disabled = false;
+}
+
+document.getElementById('q-next').addEventListener('click', () => {
+  if (qIndex < quizQuestions.length - 1){
+    qIndex++;
+    renderQuestion();
+  } else {
+    document.getElementById('q-progress-fill').style.width = '100%';
+    showResult();
+  }
+});
+
+function showResult(){
+  document.getElementById('quiz-active').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'block';
+  document.getElementById('result-score').textContent = `${score}/${quizQuestions.length}`;
+  const pct = score / quizQuestions.length;
+  let msg;
+  if (pct === 1) msg = "Perfect score — you've got Week 1 locked in.";
+  else if (pct >= 0.8) msg = "Strong grasp of the material — just a couple to review.";
+  else if (pct >= 0.6) msg = "Good start. Revisit the flashcards for the ones you missed.";
+  else msg = "Worth another pass through the Learn tab before retaking.";
+  document.getElementById('result-msg').textContent = msg;
+}
+
+document.getElementById('q-retake').addEventListener('click', startQuiz);
+
+startQuiz();
+</script>
+</body>
+</html>
+apps-fileview.texmex_20260805.11_p1
+biology_module.html
+Displaying biology_module.html. 
